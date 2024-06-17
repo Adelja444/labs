@@ -1,0 +1,129 @@
+import os  # Импортируем модуль os для работы с файловой системой
+import csv  # Импортируем модуль csv для работы с CSV-файлами
+
+def count_files_in_directory(directory):
+    """
+    Функция для подсчета количества файлов в заданной директории.
+    directory: путь к директории
+    """
+    try:
+        files = os.listdir(directory)  # Получаем список всех файлов и папок в директории
+        file_count = len([f for f in files if os.path.isfile(os.path.join(directory, f))])  # Считаем только файлы
+        return file_count  # Возвращаем количество файлов
+    except FileNotFoundError:
+        print("Указанная директория не найдена.")
+        return 0
+
+def generate_sample_data(filename):
+    """
+    Функция для генерации примера данных и сохранения их в CSV-файл.
+    filename: имя файла
+    """
+    data = [
+        {'№': 1, 'ФИО': 'Иванов Иван Иванович', 'электронная почта': 'ivanov@example.com', 'группа': '1'},
+        {'№': 2, 'ФИО': 'Петров Петр Петрович', 'электронная почта': 'petrov@example.com', 'группа': '2'},
+        {'№': 3, 'ФИО': 'Сидоров Сидор Сидорович', 'электронная почта': 'sidorov@example.com', 'группа': '1'},
+        {'№': 4, 'ФИО': 'Алексеева Алина Алексеевна', 'электронная почта': 'alekseeva@example.com', 'группа': '3'}
+    ]
+    save_data_to_csv(filename, data)  # Сохраняем сгенерированные данные в файл
+
+def load_data_from_csv(filename):
+    """
+    Функция для загрузки данных из CSV-файла в словарь.
+    filename: имя файла
+    """
+    data = []
+    with open(filename, newline='', encoding='utf-8') as csvfile:  # Открываем CSV-файл
+        reader = csv.DictReader(csvfile)  # Создаем объект DictReader для чтения файла
+        for row in reader:
+            data.append(row)  # Добавляем каждую строку в список
+    return data  # Возвращаем список словарей
+
+def save_data_to_csv(filename, data):
+    """
+    Функция для сохранения данных в CSV-файл.
+    filename: имя файла
+    data: данные для сохранения
+    """
+    with open(filename, 'w', newline='', encoding='utf-8') as csvfile:  # Открываем CSV-файл для записи
+        fieldnames = data[0].keys()  # Получаем имена полей из первого словаря
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)  # Создаем объект DictWriter
+        writer.writeheader()  # Записываем заголовок
+        writer.writerows(data)  # Записываем все строки данных
+
+def sort_data_by_string_field(data, field):
+    """
+    Функция для сортировки данных по строковому полю.
+    data: данные для сортировки
+    field: имя поля для сортировки
+    """
+    return sorted(data, key=lambda x: x[field])  # Сортируем данные по указанному полю
+
+def sort_data_by_numeric_field(data, field):
+    """
+    Функция для сортировки данных по числовому полю.
+    data: данные для сортировки
+    field: имя поля для сортировки
+    """
+    return sorted(data, key=lambda x: int(x[field]))  # Сортируем данные по указанному полю, преобразуя значения в int
+
+def filter_data_by_criterion(data, criterion_key, criterion_value):
+    """
+    Функция для фильтрации данных по указанному критерию.
+    data: данные для фильтрации
+    criterion_key: поле для фильтрации
+    criterion_value: значение для фильтрации
+    """
+    return [item for item in data if item[criterion_key] == criterion_value]  # Возвращаем список элементов, соответствующих критерию
+
+def print_data(data):
+    """
+    Функция для вывода данных в столбик.
+    data: данные для вывода
+    """
+    for row in data:
+        for key, value in row.items():
+            print(f"{key}: {value}")
+        print("-" * 20)  # Разделитель между записями
+
+def main():
+    """
+    Основная функция программы.
+    """
+    # Задание 1: Подсчет количества файлов в директории
+    directory = '/content/'  # Укажите путь к вашей директории
+    file_count = count_files_in_directory(directory)  # Подсчитываем количество файлов в директории
+    print(f"Количество файлов в директории: {file_count}")  # Выводим количество файлов
+
+    # Генерация и сохранение примера данных
+    filename = 'data.csv'  # Имя CSV-файла
+    generate_sample_data(filename)  # Генерируем и сохраняем пример данных
+
+    # Задание 2: Работа с CSV-файлом
+    data = load_data_from_csv(filename)  # Загружаем данные из CSV-файла
+    print("Данные, загруженные из CSV-файла:")
+    print_data(data)  # Выводим загруженные данные
+
+    # Задание 2.1: Сортировка данных по строковому полю (ФИО)
+    sorted_by_name = sort_data_by_string_field(data, 'ФИО')  # Сортируем данные по строковому полю (ФИО)
+    print("Данные, отсортированные по ФИО:")
+    print_data(sorted_by_name)  # Выводим отсортированные данные
+
+    # Задание 2.2: Сортировка данных по числовому полю (№)
+    sorted_by_number = sort_data_by_numeric_field(data, '№')  # Сортируем данные по числовому полю (№)
+    print("Данные, отсортированные по номеру:")
+    print_data(sorted_by_number)  # Выводим отсортированные данные
+
+    # Задание 2.3: Фильтрация данных по критерию (например, группа = '1')
+    filtered_data = filter_data_by_criterion(data, 'группа', '1')  # Фильтруем данные по критерию (например, группа = '1')
+    print("Данные, отфильтрованные по критерию (группа = '1'):")
+    print_data(filtered_data)  # Выводим отфильтрованные данные
+
+    # Добавление новых данных и сохранение обратно в файл
+    new_data = {'№': '5', 'ФИО': 'Кузнецова Ксения Кузьминична', 'электронная почта': 'kuznecova@example.com', 'группа': '2'}
+    data.append(new_data)  # Добавляем новые данные в список
+    save_data_to_csv(filename, data)  # Сохраняем обновленные данные обратно в CSV-файл
+    print("Новые данные добавлены и сохранены в файл.")
+
+if __name__ == "__main__":
+    main()  # Запускаем основную функцию программы
