@@ -1,0 +1,208 @@
+import os  # Импортируем модуль os для работы с файловой системой
+import csv  # Импортируем модуль csv для работы с CSV-файлами
+
+# Класс для работы с директориями
+class StudentDirectory:
+    def __init__(self, directory):
+        """
+        Инициализируем объект класса StudentDirectory.
+        directory: путь к директории.
+        """
+        self.directory = directory  # Сохраняем путь к директории
+        self.file_count = self._count_files_in_directory()  # Подсчитываем количество файлов в директории
+
+    def _count_files_in_directory(self):
+        """
+        Подсчитываем количество файлов в директории.
+        """
+        try:
+            files = os.listdir(self.directory)  # Получаем список всех файлов и папок в директории
+            file_count = len([f for f in files if os.path.isfile(os.path.join(self.directory, f))])  # Считаем только файлы
+            return file_count  # Возвращаем количество файлов
+        except FileNotFoundError:
+            print("Указанная директория не найдена.")
+            return 0
+
+    def __iter__(self):
+        """
+        Инициализируем итератор.
+        """
+        self.current = 0  # Начальный индекс итерации
+        return self
+
+    def __next__(self):
+        """
+        Возвращаем следующий элемент в итерации.
+        """
+        if self.current < self.file_count:
+            result = self.current
+            self.current += 1
+            return result
+        else:
+            raise StopIteration
+
+    def __len__(self):
+        """
+        Возвращаем количество файлов в директории.
+        """
+        return self.file_count
+
+# Класс для работы с данными студентов
+class StudentData:
+    def __init__(self, filename):
+        """
+        Инициализируем объект класса StudentData.
+        filename: имя файла с данными.
+        """
+        self.filename = filename  # Сохраняем имя файла
+        self.data = self._load_data_from_csv()  # Загружаем данные из CSV-файла
+        self._iterator_index = 0  # Инициализируем индекс для итерации
+
+    def _load_data_from_csv(self):
+        """
+        Загружаем данные из CSV-файла.
+        """
+        data = []
+        with open(self.filename, newline='', encoding='utf-8') as csvfile:  # Открываем CSV-файл для чтения
+            reader = csv.DictReader(csvfile)  # Создаем объект DictReader для чтения строк файла
+            for row in reader:
+                data.append(row)  # Добавляем каждую строку в список
+        return data  # Возвращаем список данных
+
+    def __getitem__(self, index):
+        """
+        Возвращаем элемент по индексу.
+        """
+        return self.data[index]
+
+    def __iter__(self):
+        """
+        Инициализируем итератор.
+        """
+        self._iterator_index = 0  # Начальный индекс итерации
+        return self
+
+    def __next__(self):
+        """
+        Возвращаем следующий элемент в итерации.
+        """
+        if self._iterator_index < len(self.data):
+            result = self.data[self._iterator_index]
+            self._iterator_index += 1
+            return result
+        else:
+            raise StopIteration
+
+    def __len__(self):
+        """
+        Возвращаем количество записей в данных.
+        """
+        return len(self.data)
+
+    def save_data_to_csv(self):
+        """
+        Сохраняем данные в CSV-файл.
+        """
+        with open(self.filename, 'w', newline='', encoding='utf-8') as csvfile:  # Открываем CSV-файл для записи
+            fieldnames = self.data[0].keys()  # Получаем имена полей из первой записи
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)  # Создаем объект DictWriter
+            writer.writeheader()  # Записываем заголовок
+            writer.writerows(self.data)  # Записываем все данные
+
+    def add_student(self, student):
+        """
+        Добавляем нового студента и сохраняем данные.
+        student: словарь с данными студента.
+        """
+        self.data.append(student)  # Добавляем студента в список
+        self.save_data_to_csv()  # Сохраняем данные в CSV-файл
+
+    def sort_data_by_string_field(self, field):
+        """
+        Сортируем данные по строковому полю.
+        field: имя поля для сортировки.
+        """
+        self.data.sort(key=lambda x: x[field])  # Сортируем данные по указанному полю
+
+    def sort_data_by_numeric_field(self, field):
+        """
+        Сортируем данные по числовому полю.
+        field: имя поля для сортировки.
+        """
+        self.data.sort(key=lambda x: int(x[field]))  # Сортируем данные по указанному полю, преобразуя значения в int
+
+    def filter_data_by_criterion(self, criterion_key, criterion_value):
+        """
+        Фильтруем данные по указанному критерию.
+        criterion_key: имя поля для фильтрации.
+        criterion_value: значение для фильтрации.
+        """
+        return [item for item in self.data if item[criterion_key] == criterion_value]  # Возвращаем список записей, соответствующих критерию
+
+    @staticmethod
+    def generate_sample_data(filename):
+        """
+        Генерируем пример данных и сохраняем их в CSV-файл.
+        filename: имя файла для сохранения данных.
+        """
+        data = [
+            {'№': 1, 'ФИО': 'Иванов Иван Иванович', 'электронная почта': 'ivanov@example.com', 'группа': '1'},
+            {'№': 2, 'ФИО': 'Петров Петр Петрович', 'электронная почта': 'petrov@example.com', 'группа': '2'},
+            {'№': 3, 'ФИО': 'Сидоров Сидор Сидорович', 'электронная почта': 'sidorov@example.com', 'группа': '1'},
+            {'№': 4, 'ФИО': 'Алексеева Алина Алексеевна', 'электронная почта': 'alekseeva@example.com', 'группа': '3'}
+        ]
+        with open(filename, 'w', newline='', encoding='utf-8') as csvfile:  # Открываем CSV-файл для записи
+            fieldnames = data[0].keys()  # Получаем имена полей
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)  # Создаем объект DictWriter
+            writer.writeheader()  # Записываем заголовок
+            writer.writerows(data)  # Записываем данные
+
+    def __str__(self):
+        """
+        Возвращаем строковое представление данных.
+        """
+        return '\n'.join([str(item) for item in self.data])  # Возвращаем все данные как строку
+
+# Основная функция программы
+def main():
+    """
+    Основная функция программы.
+    """
+    # Задание 1: Подсчет количества файлов в директории
+    directory = '/content/'  # Укажите путь к вашей директории
+    student_directory = StudentDirectory(directory)  # Создаем объект класса StudentDirectory
+    print(f"Количество файлов в директории: {len(student_directory)}")  # Выводим количество файлов
+
+    # Генерация и сохранение примера данных
+    filename = 'data.csv'  # Имя файла для данных
+    StudentData.generate_sample_data(filename)  # Генерируем и сохраняем пример данных
+
+    # Задание 2: Работа с CSV-файлом
+    student_data = StudentData(filename)  # Создаем объект класса StudentData
+    print("Данные, загруженные из CSV-файла:")
+    print(student_data)  # Выводим данные
+
+    # Задание 2.1: Сортировка данных по строковому полю (ФИО)
+    student_data.sort_data_by_string_field('ФИО')  # Сортируем данные по строковому полю
+    print("Данные, отсортированные по ФИО:")
+    print(student_data)  # Выводим отсортированные данные
+
+    # Задание 2.2: Сортировка данных по числовому полю (№)
+    student_data.sort_data_by_numeric_field('№')  # Сортируем данные по числовому полю
+    print("Данные, отсортированные по номеру:")
+    print(student_data)  # Выводим отсортированные данные
+
+    # Задание 2.3: Фильтрация данных по критерию (например, группа = '1')
+    filtered_data = student_data.filter_data_by_criterion('группа', '1')  # Фильтруем данные по критерию
+    print("Данные, отфильтрованные по критерию (группа = '1'):")
+    for item in filtered_data:
+        print(item)  # Выводим отфильтрованные данные
+
+    # Добавление новых данных и сохранение обратно в файл
+    new_student = {'№': '5', 'ФИО': 'Кузнецова Ксения Кузьминична', 'электронная почта': 'kuznecova@example.com', 'группа': '2'}
+    student_data.add_student(new_student)  # Добавляем нового студента
+    print("Новые данные добавлены и сохранены в файл.")
+    print(student_data)  # Выводим обновленные данные
+
+if __name__ == "__main__":
+    main()  # Запускаем основную функцию программы
